@@ -45,7 +45,7 @@ pub fn empty<I>(input: I) -> ParseResult<I, ()> {
 /// the error to an Ok(_, None) result.
 ///
 /// # Arguments
-/// * parser: the parser to apply
+/// * `parser` - The parser to apply
 pub fn optional<P, I, O>(parser: P) -> impl Parser<I, O>
 where
     P: Parser<I, O>,
@@ -60,7 +60,7 @@ where
 /// output to None.
 ///
 /// # Arguments
-/// * parser: the parser to apply
+/// * `parser` - The parser to apply
 pub fn discard<P, I, O>(parser: P) -> impl Parser<I, O>
 where
     P: Parser<I, O>,
@@ -75,8 +75,8 @@ where
 /// true. Otherwise, return Err.
 ///
 /// # Arguments
-/// * parser: the parser to apply
-/// * f: the function to apply the parser output to
+/// * `parser` - The parser to apply
+/// * `f` - The function to apply the parser output to
 pub fn satisfy<P, F, I, O>(parser: P, f: F) -> impl Parser<I, O>
 where
     F: Fn(&O) -> bool,
@@ -95,8 +95,8 @@ where
 /// Apply input to `parser`, mapping any Ok value with the function f.
 ///
 /// # Arguments
-/// * parser: the parser to apply
-/// * f: the function to apply the parser output to
+/// * `parser` - The parser to apply
+/// * `f` - The function to map the parser output value with
 pub fn map<P, F, I, A, B>(parser: P, f: F) -> impl Parser<I, B>
 where
     P: Parser<I, A>,
@@ -110,8 +110,8 @@ where
 /// Apply input to `parser`, mapping any Ok(Some(_)) value with the function f.
 ///
 /// # Arguments
-/// * parser: the parser to apply
-/// * f: the function to apply the parser output to
+/// * `parser` - The parser to apply
+/// * `f` - The function to map the parser output value with
 pub fn mapv<P, F, I, A, B>(parser: P, f: F) -> impl Parser<I, B>
 where
     P: Parser<I, A>,
@@ -126,7 +126,7 @@ where
 /// ParserResults containing the Ok(_) results.
 ///
 /// # Arguments
-/// * parser: the parser to apply
+/// * `parser` - The parser to apply repeatedly
 pub fn repeat<P, I, O>(parser: P) -> impl Parser<I, Vec<O>>
 where
     P: Parser<I, O>,
@@ -158,7 +158,7 @@ where
 /// application of the parser returned Err.
 ///
 /// # Arguments
-/// * parser: the parser to apply
+/// * `parser` - The parser to apply repeatedly
 pub fn repeat1<P, I, O>(parser: P) -> impl Parser<I, Vec<O>>
 where
     P: Parser<I, O>,
@@ -177,7 +177,7 @@ where
 /// Apply repeat() and then collect the vector into the inferred type U.
 ///
 /// # Arguments
-/// * parser: the parser to apply
+/// * `parser` - The parser to apply repeatedly
 pub fn repeatc<P, I, O, U>(parser: P) -> impl Parser<I, U>
 where
     P: Parser<I, O>,
@@ -190,10 +190,11 @@ where
 /// One Of
 ///
 /// Apply parsers in order until one returns an Ok result, returning the
-/// result of that parser.
+/// result of that parser. If any parser returns Err, `one_of` will immediately
+/// return that Err.
 ///
 /// # Arguments
-/// * parsers: A vector of parsers to apply in order
+/// * `parsers` - A vector of parsers to apply in order
 pub fn one_of<'a, I, O>(parsers: Vec<Box<dyn 'a + Parser<I, O>>>) -> impl 'a + Parser<I, O>
 where
     I: Copy + 'a,
@@ -228,8 +229,8 @@ macro_rules! one_of {
 /// * Any Ok((_, None)) results are filtered out
 /// * Any parser that returns Err causes seq to immediately return Err
 ///
-/// #Arguments
-/// * parsers: the parsers to apply
+/// # Arguments
+/// * `parsers` - The parsers to apply
 pub fn seq<'a, I, O>(parsers: Vec<Box<dyn 'a + Parser<I, O>>>) -> impl 'a + Parser<I, Vec<O>>
 where
     I: Copy + 'a,
@@ -294,9 +295,9 @@ macro_rules! seqc {
 /// or expressions like "(foo bar baz)".
 ///
 /// # Arguments
-/// prefix: the first parser to apply
-/// parser: the parser to apply and return
-/// suffix: the final parser to apply
+/// `prefix` - The first parser to apply
+/// `parser` - The parser to apply and return
+/// `suffix` - The final parser to apply
 pub fn between<A, B, C, OA, OB, OC, I>(prefix: A, parser: B, suffix: C) -> impl Parser<I, OB>
 where
     A: Parser<I, OA>,
@@ -331,11 +332,10 @@ where
 
 /// Collect
 ///
-/// Collect the results of `parser` into the type inferred
-/// by U.
+/// Collect the results of `parser` into the type inferred by U.
 ///
 /// # Arguments
-/// * parser: the parser to apply
+/// * `parser` - The parser to apply
 pub fn collect<P, I, O, U>(parser: P) -> impl Parser<I, U>
 where
     P: Parser<I, O>,
