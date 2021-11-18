@@ -1,4 +1,7 @@
-# Parcom [![Rust](https://github.com/strtok/parcom/actions/workflows/rust.yml/badge.svg)](https://github.com/strtok/parcom/actions/workflows/rust.yml)
+# Parcom &emsp; [![License Badge]][License] [![Rust](https://github.com/strtok/parcom/actions/workflows/rust.yml/badge.svg)](https://github.com/strtok/parcom/actions/workflows/rust.yml)
+
+[License Badge]: https://img.shields.io/badge/license-MIT%2FApache--2.0-blue?style=flat&logo=appveyor
+[License]: LICENSE-MIT
 
 Parcom is a trait + closure based parser combinator library loosely following the [Parsec Paper](https://www.microsoft.com/en-us/research/publication/parsec-direct-style-monadic-parser-combinators-for-the-real-world/)
 
