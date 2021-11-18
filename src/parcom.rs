@@ -1,11 +1,27 @@
-use std::rc::Rc;
-
+/// The result of a parser application
+///
+/// ParseResult<I, O> is the result returned by parsers to propagate
+/// recursively parsed results, or errors.
+///
+/// * Ok((I, Option<O>)) contains the remaining unparsed input (I)
+/// and an optional output of the parser.
+///
+/// An Err result contains the input that could not be parsed.
 pub type ParseResult<I, O> = Result<(I, Option<O>), I>;
 
+
+/// A parser
+///
+/// A oarser is applied on input, and returns a result containing
+/// the remaining unparsed input and optional output, or an error.
 pub trait Parser<I, O> {
     fn apply(&self, input: I) -> ParseResult<I, O>;
 }
 
+/// Implement Parser for functions in the parser form.
+///
+/// Any function in the form Fn(I) -> ParseResult<I, O> may be
+/// treated as a parser.
 impl<F, I, O> Parser<I, O> for F
 where
     F: Fn(I) -> ParseResult<I, O>,
@@ -15,19 +31,21 @@ where
     }
 }
 
-impl<I, O, P> Parser<I, O> for Rc<P>
-where
-    P: Parser<I, O>,
-{
-    fn apply(&self, input: I) -> ParseResult<I, O> {
-        (**self).apply(input)
-    }
-}
-
+/// Empty
+///
+/// A parser that consumes no input and always returns an empty
+/// result.
 pub fn empty<I>(input: I) -> ParseResult<I, ()> {
     Ok((input, None))
 }
 
+/// Optional
+///
+/// Apply input to `parser`. If parser returns Err, then map
+/// the error to an Ok(_, None) result.
+///
+/// # Arguments
+/// * parser: the parser to apply
 pub fn optional<P, I, O>(parser: P) -> impl Parser<I, O>
 where
     P: Parser<I, O>,
@@ -36,6 +54,13 @@ where
     move |input| parser.apply(input).or(Ok((input, None)))
 }
 
+/// Discard
+///
+/// Apply input to `parser` and discard any output by mapping the
+/// output to None.
+///
+/// # Arguments
+/// * parser: the parser to apply
 pub fn discard<P, I, O>(parser: P) -> impl Parser<I, O>
 where
     P: Parser<I, O>,
@@ -44,6 +69,14 @@ where
     move |input| parser.apply(input).map(|(rest, _)| (rest, None))
 }
 
+/// Satisfy
+///
+/// Apply input to `parser`, and return it if f(input) evaluates to
+/// true. Otherwise, return Err.
+///
+/// # Arguments
+/// * parser: the parser to apply
+/// * f: the function to apply the parser output to
 pub fn satisfy<P, F, I, O>(parser: P, f: F) -> impl Parser<I, O>
 where
     F: Fn(&O) -> bool,
@@ -57,6 +90,13 @@ where
     }
 }
 
+/// Map
+///
+/// Apply input to `parser`, mapping any Ok value with the function f.
+///
+/// # Arguments
+/// * parser: the parser to apply
+/// * f: the function to apply the parser output to
 pub fn map<P, F, I, A, B>(parser: P, f: F) -> impl Parser<I, B>
 where
     P: Parser<I, A>,
@@ -65,6 +105,13 @@ where
     move |input| parser.apply(input).map(|(rest, output)| (rest, f(output)))
 }
 
+/// Mapv
+///
+/// Apply input to `parser`, mapping any Ok(Some(_)) value with the function f.
+///
+/// # Arguments
+/// * parser: the parser to apply
+/// * f: the function to apply the parser output to
 pub fn mapv<P, F, I, A, B>(parser: P, f: F) -> impl Parser<I, B>
 where
     P: Parser<I, A>,
@@ -73,6 +120,13 @@ where
     map(parser, move |output| output.map(|output| f(output)))
 }
 
+/// Repeat
+///
+/// Apply the parser continually until it return Err, returning a vector of
+/// ParserResults containing the Ok(_) results.
+///
+/// # Arguments
+/// * parser: the parser to apply
 pub fn repeat<P, I, O>(parser: P) -> impl Parser<I, Vec<O>>
 where
     P: Parser<I, O>,
@@ -97,6 +151,14 @@ where
     }
 }
 
+/// Repeat
+///
+/// Apply the parser continually until it return Err, returning a vector of
+/// ParserResults containing the Ok(_) results. Return an error if the first
+/// application of the parser returned Err.
+///
+/// # Arguments
+/// * parser: the parser to apply
 pub fn repeat1<P, I, O>(parser: P) -> impl Parser<I, Vec<O>>
 where
     P: Parser<I, O>,
@@ -110,6 +172,12 @@ where
     }
 }
 
+/// Repeatc
+///
+/// Apply repeat() and then collect the vector into the inferred type U.
+///
+/// # Arguments
+/// * parser: the parser to apply
 pub fn repeatc<P, I, O, U>(parser: P) -> impl Parser<I, U>
 where
     P: Parser<I, O>,
@@ -119,6 +187,13 @@ where
     mapv(repeat(parser), |v| v.into_iter().collect())
 }
 
+/// One Of
+///
+/// Apply parsers in order until one returns an Ok result, returning the
+/// result of that parser.
+///
+/// # Arguments
+/// * parsers: A vector of parsers to apply in order
 pub fn one_of<'a, I, O>(parsers: Vec<Box<dyn 'a + Parser<I, O>>>) -> impl 'a + Parser<I, O>
 where
     I: Copy + 'a,
@@ -146,6 +221,15 @@ macro_rules! one_of {
     };
 }
 
+/// Sequence
+///
+/// Apply parsers in order, returning a vector of each parser's result.
+///
+/// * Any Ok((_, None)) results are filtered out
+/// * Any parser that returns Err causes seq to immediately return Err
+///
+/// #Arguments
+/// * parsers: the parsers to apply
 pub fn seq<'a, I, O>(parsers: Vec<Box<dyn 'a + Parser<I, O>>>) -> impl 'a + Parser<I, Vec<O>>
 where
     I: Copy + 'a,
@@ -201,6 +285,18 @@ macro_rules! seqc {
     };
 }
 
+/// Between
+///
+/// Apply three parsers (prefix, paraser, suffix) and return the result of
+/// `parser`'s output.
+///
+/// This parser may be used to parse expressions such as quoted strings (e.g. "foo")
+/// or expressions like "(foo bar baz)".
+///
+/// # Arguments
+/// prefix: the first parser to apply
+/// parser: the parser to apply and return
+/// suffix: the final parser to apply
 pub fn between<A, B, C, OA, OB, OC, I>(prefix: A, parser: B, suffix: C) -> impl Parser<I, OB>
 where
     A: Parser<I, OA>,
@@ -233,6 +329,13 @@ where
     }
 }
 
+/// Collect
+///
+/// Collect the results of `parser` into the type inferred
+/// by U.
+///
+/// # Arguments
+/// * parser: the parser to apply
 pub fn collect<P, I, O, U>(parser: P) -> impl Parser<I, U>
 where
     P: Parser<I, O>,
@@ -415,16 +518,6 @@ mod tests {
         assert_eq!(
             parser().apply("(12345)"),
             Ok(("", Some("12345".to_owned())))
-        );
-    }
-
-    #[test]
-    fn rc_parser() {
-        let parser = Rc::new(digit_char());
-        let combined_parser = repeat(parser.clone());
-        assert_eq!(
-            combined_parser.apply("123"),
-            Ok(("", Some(vec!('1', '2', '3'))))
         );
     }
 }
