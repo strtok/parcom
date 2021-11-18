@@ -5,9 +5,14 @@
 
 Parcom is a trait + closure based parser combinator library loosely following the [Parsec Paper](https://www.microsoft.com/en-us/research/publication/parsec-direct-style-monadic-parser-combinators-for-the-real-world/)
 
+This project is experimental and is missing some features that make it generally useful:
+
+* Distinguishing between fatal and non-fatal errors
+* A generic way of combining characters, string splices and strings efficiently
+
 # Example
 
-The following is an example of a parser for a lisp like language:
+Here's an example of a parser for a lisp like language (e.g. `(+ 1 2 (* 10 10))`):
 
 ```rust
 pub fn identifier<'a>() -> impl Parser<&'a str, String> {
