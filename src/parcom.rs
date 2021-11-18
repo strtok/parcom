@@ -12,7 +12,7 @@ pub type ParseResult<I, O> = Result<(I, Option<O>), I>;
 
 /// A parser
 ///
-/// A oarser is applied on input, and returns a result containing
+/// A parser is applied on input, and returns a result containing
 /// the remaining unparsed input and optional output, or an error.
 pub trait Parser<I, O> {
     fn apply(&self, input: I) -> ParseResult<I, O>;
