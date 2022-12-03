@@ -8,7 +8,7 @@ Parcom is a trait + closure based parser combinator library loosely following th
 This project is experimental and is missing some features that make it generally useful:
 
 * Distinguishing between fatal and non-fatal errors
-* A generic way of combining characters, string splices and strings efficiently
+* A generic way of combining characters, string slices and strings efficiently
 
 # Example
 
